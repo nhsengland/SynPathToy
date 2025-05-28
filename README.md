@@ -4,103 +4,47 @@
 <!-- page header -->
 <br/>
 <div align="center">
-    <h2 align="center">{PROJECT NAME}</h2>
-    <h3 align="center">{TEAM NAME}, Data & Analytics (D&A)</h3>
+    <h2 align="center">SynPath - Toy Model</h2>
+    <h3 align="center">Data Science and Applied AI Team, Data & Analytics (D&A)</h3>
     <p align="center">
-        This project is in development, and should not be relied upon. Please do not use any code without consultation of {TEAM NAME} (D&A). Be aware that whilst a significant part of the code has been quality assured, there remain large elements of the codebase which have not yet been.
+        This project is in development, and should not be relied upon. Please do not use any code without consultation of the Data Science and Applied AI team (D&A). 
         <br/>
-        <a href="https://github.com/nhsengland/{REPO NAME}/issues">Report Bug</a>
-        <a href="https://github.com/nhsengland/{REPO NAME}">Request Feature</a>
+        <a href="https://github.com/nhsengland/SynPathToy/issues">Report Bug</a>
+        <a href="https://github.com/nhsengland/SynPathToy">Request Feature</a>
     </p>
 </div>
 
-<!-- table of contents -->
-
-<details>
-    <summary>Table of Contents</summary>
-    <ol>
-        <li>
-            <a href="#section-1">About the project</a>
-            <ul>
-                <li><a href="#section-1-1">Project Structure</a></li>
-                <li><a href="#section-1-2">Built With</a></li>
-                <li><a href="#section-1-3">Datasets</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#section-2">Usage</a></li>
-            <ul>
-                <li><a href="#section-2-1">Output</a></li>
-                <li><a href="#section-2-2">Roadmap</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#section-3">Contributing</a></li>
-            <ul>
-                <li><a href="#section-3-1">Contact</a></li>
-            </ul>
-        </li>
-        <li><a href="#section-4">License</a></li>
-</details>
-
-
-
-<!-- Section 1 -->
-<a name="section-1"></a>
 ### About the Project
 
-This repository holds code for the {PROJECT NAME} {SHORT DESCRIPTION}
-
-[Link to any external reference sources/publications](https://)
+This repository holds a single notebook which contains a toy simulation of patient pathways to be optimised for both patient outcomes and system cost.  The simulation includes:
+- Patient Class (incl. age, sex, diseases, clinical values, priority)
+- Action Class (incl. capacity, effects of the action on the patient clincial values, cost, duration, queue)
+- Pathway Class (incl. valid transitions and thresholds)
+    - The next_action method chooses from the valid transitions using the demographic, clinical value and random thresholds
+- Simulation Setup (default set to 10 patients, 10 pathways, 10 actions, 30 time steps)
+- Q-Learning Setup (based on the age_threshold condition)
+- Simulation Run 
+- Visualisations of outcomes
 
 _**Note:** Only public or fake data are shared in this repository._
 
-<a name="section-1-1"></a>
-### Project Stucture
-
-- The main code is found in the root of the repository (see Usage below for more information)
-- The accompanying [report](./reports/report.pdf) is also available in the `reports` folder
-- More information about the code usage can be found in the [model card](./model_card.md)
-- {OTHER REPO STRUCTURE}
-
-<a name="section-1-2"></a>
 ### Built With
 
 [![Python v3.9](https://img.shields.io/badge/python-v3.9-blue.svg)](https://www.python.org/downloads/release/python-3916/)
-- {LIST OF MAIN PACKAGE VERSIONS}
+- Core Python packages (e.g. numpy, pandas)
+- Core python visulisation packages (e.g. matplotlib, networkx, seaborn)
+- [heapq](https://docs.python.org/3/library/heapq.html) for the priority queue implementation
 
-<a name="section-1-3"></a>
-#### Datasets
-{DESCRIPTION AND LINKS TO DATASETS}
+#### Data
 
-{LINK TO FAKE DATA TO SUPPORT INITAIL CODE RUNS}
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+As this is a toy simulation, fake data is generated within the code using random numbers.   It does not reflect any real world data or insights. 
 
 
-
-<!-- Section 2 -->
-<a name="section-2"></a>
 ### Usage
-{DESCRIPTION OF CODE}
+This code has been created to demonstrate some of the features required when optimising patient pathways.   It is to be used as a demonstration only. 
 
-<a name="section-2-1"></a>
 #### Outputs
-{LIST AND DESCRIPTION OF OUTPUTS}
-
-{NOTES ON REPRODUCIBILITY OF RESULTS}
-
-<a name="section-2-2"></a>
-### Roadmap
-
-See the {LINK TO REPO ISSUES} for a list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- Section 3 -->
-<a name="section-3"></a>
+Visualisations of the system to be generated as well as figures showing usage, queues and outcomes.   The random seeds can be uncommented in the first cell to create reproducible results. 
 
 ### Contributing
 
@@ -114,19 +58,9 @@ Contributions are what make the open source community such an amazing place to l
 
 _See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidance._
 
-<a name="section-3-1"></a>
 ### Contact
+datascience@nhs.net
 
-To access the Unified Data Access Layer (UDAL), please contact to our [Service Desk](mailto:NationalDataPlatform@england.nhs.uk) with the request form on [FutureNHS](https://future.nhs.uk/NCDR/view?objectId=22272688)
-
-<!-- ### Acknowledgements -->
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- Section 4 -->
-<a name="section-4"></a>
 ### License
 
 Unless stated otherwise, the codebase is released under [the MIT Licence][mit].
@@ -140,5 +74,3 @@ of the [Open Government 3.0][ogl] licence.
 [mit]: LICENCE
 [copyright]: http://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/
 [ogl]: http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
