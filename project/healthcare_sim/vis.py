@@ -6,60 +6,66 @@ from IPython.display import display
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
-from healthcare_sim.config import (
-    NUM_PATHWAYS,
-    NUM_ACTIONS,
-    IDEAL_CLINICAL_VALUES)
 
-"""
-This cell provides various visualizations to analyze the simulation results:
 
-1. **Action Queue Usage**:
-    - A bar plot showing the number of patients in the queue for each action at the end of the simulation.
-
-2. **Action Schedule Usage Over Time**:
-    - A heatmap displaying the number of patients served by each action over time.
-
-3. **Penalty Distributions**:
-    - Histograms showing the distribution of queue penalties and clinical penalties across all patients.
-
-4. **Action Usage Over Time**:
-    - A line plot showing the number of patients served by each action at each timestep.
-
-5. **System Cost Over Time**:
-    - A line plot showing the total system cost at each timestep.
-
-6. **Reward Over Time**:
-    - A line plot showing the reward (negative cost) over time, reflecting the system's performance.
-
-7. **Q-values for State-Action Pairs**:
-    - A line plot showing the Q-values for each state-action pair, providing insights into the learning process.
-
-8. **Age Threshold vs Rewards**:
-    - A line plot showing the relationship between dynamically adjusted age thresholds and the corresponding rewards (negative costs).
-"""
-
-def vis_sim(patients, pathways, actions, IDEAL_CLINICAL_VALUES, system_cost, q_threshold_rewards):
+def vis_action_q(actions_major, first_major_step, last_major_step):
     
-    plt.figure(figsize=(12, 6))
-    plt.title("Action Queue Usage at simulation end")
-    sns.barplot(x=list(actions.keys()), y=[len(act.queue) for act in actions.values()])
-    plt.ylabel("Patients in Queue")
-    plt.xticks(rotation=45)
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6), sharey=True)
+
+    # First major step
+    actions_first = actions_major[first_major_step]
+    axes[0].bar(list(actions_first.keys()), [len(act.queue) for act in actions_first.values()], color='skyblue')
+    axes[0].set_title(f"Action Queue Usage at Simulation End\nFirst Major Step ({first_major_step})")
+    axes[0].set_ylabel("Patients in Queue")
+    axes[0].set_xlabel("Action")
+    axes[0].set_xticklabels(list(actions_first.keys()), rotation=45)
+
+    # Last major step
+    actions_last = actions_major[last_major_step]
+    axes[1].bar(list(actions_last.keys()), [len(act.queue) for act in actions_last.values()], color='salmon')
+    axes[1].set_title(f"Action Queue Usage at Simulation End\nLast Major Step ({last_major_step})")
+    axes[1].set_xlabel("Action")
+    axes[1].set_xticklabels(list(actions_last.keys()), rotation=45)
+
     plt.tight_layout()
     plt.show()
+        
+def vis_heatmaps(actions_major, first_major_step, last_major_step):
+    heatmap_data_first = np.array([act.schedule for act in actions_major[first_major_step].values()])
+    heatmap_data_last = np.array([act.schedule for act in actions_major[last_major_step].values()])
 
-    heatmap_data = np.array([act.schedule for act in actions.values()])
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6), sharey=True)
 
-    # Plot the heatmap
-    plt.figure(figsize=(12, 6))
-    sns.heatmap(heatmap_data, cmap="viridis", annot=False, cbar=True)
-    plt.title("Action Schedule Usage Over Time")
-    plt.xlabel("Time")
-    plt.ylabel("Action")
-    plt.yticks(ticks=np.arange(len(actions)) + 0.5, labels=list(actions.keys()), rotation=0)
-    plt.show()
+    # First major step
+    sns.heatmap(
+        heatmap_data_first,
+        cmap="viridis",
+        annot=False,
+        cbar=True,
+        ax=axes[0]
+    )
+    axes[0].set_title(f"Action Schedule Usage Over Time\nFirst Major Step ({first_major_step})")
+    axes[0].set_xlabel("Time")
+    axes[0].set_ylabel("Action")
+    axes[0].set_yticks(np.arange(len(actions_major[first_major_step])) + 0.5)
+    axes[0].set_yticklabels(list(actions_major[first_major_step].keys()), rotation=0)
 
+    # Last major step
+    sns.heatmap(
+        heatmap_data_last,
+        cmap="viridis",
+        annot=False,
+        cbar=True,
+        ax=axes[1]
+    )
+    axes[1].set_title(f"Action Schedule Usage Over Time\nLast Major Step ({last_major_step})")
+    axes[1].set_xlabel("Time")
+    axes[1].set_ylabel("")
+
+    plt.tight_layout()
+    plt.show()   
+    
+def vis_penalty(patients):
     # Subplot 1: Queue Penalty
     plt.subplot(1, 2, 1)
     sns.histplot([p.outcomes['queue_penalty'] for p in patients], kde=True, color='blue')
@@ -76,133 +82,111 @@ def vis_sim(patients, pathways, actions, IDEAL_CLINICAL_VALUES, system_cost, q_t
 
     plt.tight_layout()
     plt.show()
+    
+def vis_activity(actions_major, first_major_step, last_major_step):
+
+    actions_first = actions_major[first_major_step]
+    actions_last = actions_major[last_major_step]
+    
+    plt.figure(figsize=(15,5))
 
     # Queue usage
-    plt.figure(figsize=(12,6))
-    for name, act in actions.items():
+    plt.subplot(1, 2, 1)
+    for name, act in actions_first.items():
         plt.plot(act.schedule, label=name)
     plt.title("Action Usage Over Time")
     plt.xlabel("Timestep")
     plt.ylabel("Patients Served")
     plt.legend()
-    plt.grid(True)
-    plt.show()
 
-    # System cost over time
-    plt.figure(figsize=(10,5))
-    plt.plot(system_cost, color='red')
-    plt.title("System Cost Over Time")
+    plt.subplot(1, 2, 2)
+    for name, act in actions_last.items():
+        plt.plot(act.schedule, label=name)
+    plt.title("Action Usage Over Time")
     plt.xlabel("Timestep")
-    plt.ylabel("Cost")
-    plt.grid(True)
-    plt.show()
-
-    # Visualize the reward over time
-    plt.figure(figsize=(10, 5))
-    plt.plot([-cost for cost in system_cost], label="Reward (Negative Cost)", color="blue")
-    plt.title("Reward Over Time")
-    plt.xlabel("Timestep")
-    plt.ylabel("Reward")
-    plt.grid(True)
+    plt.ylabel("Patients Served")
     plt.legend()
-    plt.show()
 
-    # Extract age_thresholds and rewards from age_threshold_rewards
-    q_thresholds, rewards = zip(*q_threshold_rewards)
-
-    # Plot the data
-    plt.figure(figsize=(10, 5))
-    plt.plot(q_thresholds, rewards, marker='o', linestyle='-', color='blue', label='Reward vs q Threshold')
-    plt.title("Q-Learning Impact: Age Threshold vs Rewards")
-    plt.xlabel("Age Threshold")
-    plt.ylabel("Reward (Negative Cost)")
     plt.grid(True)
-    plt.legend()
     plt.show()
-
-    print("Total system cost:", sum(system_cost))
-    print("Average queue penalty:", np.mean([p.outcomes['queue_penalty'] for p in patients]))
-    print("Average clinical penalty:", np.mean([p.outcomes['clinical_penalty'] for p in patients]))
-    print("Average wait time:", np.mean([p.queue_time for p in patients]))
-    print("Average clinical variables:", {k: np.mean([p.clinical[k] for p in patients]) for k in IDEAL_CLINICAL_VALUES.keys()})
-
-
-def vis_q(NUM_PATHWAYS, actions, q_table, activity_log, q_state_action_pairs):
-    """ Visualize the Q-learning results, focusing on the impact of q-values on actions and their effects. """
     
-    # Summarize what Q-learning has learnt: best action per pathway (state)
-    best_actions = {}
-    for state, actions_dict in q_table.items():
-        if actions_dict:
-            best_action = max(actions_dict, key=lambda a: actions_dict[a])
-            best_q = actions_dict[best_action]
-            best_actions[state] = (best_action, best_q)
-            
-    # Aggregate usage, cost, and effect for each action and q-value for a single q_state
-    q_state = 'P3'
-    possible_q_values = [0, best_actions.get(q_state, (None, 0))[0]]
-    action_names = list(actions.keys())
-    df = pd.DataFrame(activity_log)
-    q_state_action_df = pd.DataFrame(q_state_action_pairs, columns=['q_state', 'q_value'])
-    q_state_action_df['step'] = q_state_action_df.index // NUM_PATHWAYS
+def vis_learning(system_cost_major, first_major_step, last_major_step):
+    plt.figure(figsize=(10, 6))
+    plt.plot(
+        list(system_cost_major[first_major_step].keys()),
+        list(system_cost_major[first_major_step].values()),
+        label=f'First Major Step ({first_major_step})',
+        color='blue',
+        marker='o'
+    )
+    plt.plot(
+        list(system_cost_major[last_major_step].keys()),
+        list(system_cost_major[last_major_step].values()),
+        label=f'Last Major Step ({last_major_step})',
+        color='red',
+        marker='o'
+    )
+    plt.title("System Cost Over Time: First vs Last Major Step")
+    plt.xlabel("Timestep")
+    plt.ylabel("System Cost")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()   
+    
+def vis_change(transition_matrix, actions_major, first_major_step, last_major_step):
+    # Show action usage vs cost for the selected pathway for both first and last major_step on the same figure,
+    # with an arrow from first to last (green if usage increased, red if decreased)
 
-    # Prepare a DataFrame for aggregation
-    agg_data = []
-    for q_val in possible_q_values:
-        # Steps where this q_state had this q_value
-        steps = q_state_action_df[(q_state_action_df['q_state'] == q_state) & (q_state_action_df['q_value'] == q_val)]['step'].unique()
-        # Filter activity for this q_state and these steps
-        state_df = df[(df['pathway_code'] == q_state) & (df['simulation_time'].isin(steps))]
-        for action in action_names:
-            usage = state_df['action_name'].value_counts().get(action, 0)
-            total_cost = actions[action].cost * usage
-            total_effect = sum(abs(v) for v in actions[action].effect.values()) * usage
-            agg_data.append({
-                'q_value': q_val,
-                'action': action,
-                'usage': usage,
-                'total_cost': total_cost,
-                'total_effect': total_effect
-            })
+    selected_pathway = 'P0'
+    actions_in_pathway = list(transition_matrix[selected_pathway].keys())
 
-    agg_df = pd.DataFrame(agg_data)
+    plt.figure(figsize=(10, 6))
 
-    # Plot
-    plt.figure(figsize=(10, 7))
-    colors = dict(zip(possible_q_values, sns.color_palette("tab10", len(possible_q_values))))
-    for q_val in possible_q_values:
-        subset = agg_df[agg_df['q_value'] == q_val]
-        plt.scatter(
-            subset['total_cost'],
-            subset['total_effect'],
-            s=subset['usage']*10 + 10,  # Bubble size
-            color=colors[q_val],
-            alpha=0.7,
-            label=f'q={q_val}',
-            edgecolors='black'
-        )
-        # Annotate action names
-        for _, row in subset.iterrows():
-            if row['usage'] > 0:
-                plt.text(row['total_cost'], row['total_effect'], row['action'], fontsize=9, ha='right', va='bottom')
+    actions_first = actions_major[first_major_step]
+    actions_last = actions_major[last_major_step]
 
-    plt.xlabel("Total Cost (Action Cost × Usage)")
-    plt.ylabel("Total Effect (Sum of Effects × Usage)")
-    plt.title(f"Impact of q-values for q_state={q_state}")
-    plt.legend(title="q_threshold")
+    usage_first = []
+    cost_first = []
+    usage_last = []
+    cost_last = []
+
+    for action_name in actions_in_pathway:
+        # Get usage and cost for both steps
+        if action_name in actions_first and action_name in actions_last:
+            act_first = actions_first[action_name]
+            act_last = actions_last[action_name]
+            usage_f = sum(act_first.schedule)
+            usage_l = sum(act_last.schedule)
+            cost = act_first.cost  # assume cost doesn't change between steps
+            usage_first.append(usage_f)
+            cost_first.append(cost)
+            usage_last.append(usage_l)
+            cost_last.append(cost)
+
+            # Draw arrow
+            color = 'green' if usage_l > usage_f else 'red'
+            plt.arrow(
+                usage_f, cost, usage_l - usage_f, 0, 
+                head_width=2, head_length=5, length_includes_head=True, 
+                color=color, alpha=0.7
+            )
+            # Label start and end
+            plt.text(usage_f, cost, action_name, fontsize=11, ha='right', va='bottom', color='blue')
+            plt.text(usage_l, cost, action_name, fontsize=11, ha='left', va='top', color='red')
+
+    plt.scatter(usage_first, cost_first, s=100, color='skyblue', label=f'First Major Step ({first_major_step})')
+    plt.scatter(usage_last, cost_last, s=100, color='salmon', label=f'Last Major Step ({last_major_step})')
+
+    plt.xlabel("Total Patients Served (Usage)")
+    plt.ylabel("Action Cost")
+    plt.title(f"Action Usage vs Cost for Pathway {selected_pathway}\nFirst to Last Major Step (Arrow shows change)")
+    plt.grid(True)
+    plt.legend()
     plt.tight_layout()
     plt.show()
-
-    print("Best Q-learning action per pathway (state):")
-    for state, (action, q_value) in best_actions.items():
-        print(f"  Pathway: {state} | Best q_threshold: {action} | Q-value: {q_value:.2f}")
-        
-    return best_actions
-        
-        
-def vis_sankey(activity_log):
-    """ Visualize the patient action flow using a Sankey diagram. """
     
+def vis_sankey(activity_log, ):
     # Display activity_log as a DataFrame (tabular form)
     activity_df = pd.DataFrame(activity_log)
     # filter to one example patient for clarity
@@ -292,37 +276,7 @@ def vis_sankey(activity_log):
 
     fig.update_layout(title_text="Patient Action Flow (Sankey Diagram)", font_size=10)
     fig.show(renderer="browser")
-    return example_patient_df
-    
-def q_learning(example_patient_df, best_actions):
-    """ Q-learning visualization: Show how the Q-learning algorithm has learned to prefer actions based on their effects and costs. """
-    
-    # Visualize for each pathway the Q-learning preference: higher effect (positive q_threshold) vs lower cost (negative q_threshold)
-    all_pathways = sorted(example_patient_df['pathway_code'].unique())
-    # Prepare data: for each pathway, get the best q_threshold and its sign
-    q_pref_df = pd.DataFrame([
-        {"Pathway": state, "Best_q_threshold": best_actions[state][0], "Q_value": best_actions[state][1]}
-        for state in all_pathways if state in best_actions
-    ])
-    q_pref_df["Preference"] = q_pref_df["Best_q_threshold"].apply(lambda x: "Higher Effect" if x > 0 else ("Lower Cost" if x < 0 else "Neutral"))
-
-    # Plot
-    plt.figure(figsize=(10, 5))
-    sns.barplot(
-        data=q_pref_df.sort_values("Best_q_threshold"),
-        x="Pathway",
-        y="Best_q_threshold",
-        hue="Preference",
-        dodge=False,
-        palette={"Higher Effect": "green", "Lower Cost": "blue", "Neutral": "gray"}
-    )
-    plt.axhline(0, color='black', linestyle='--', linewidth=1)
-    plt.title("Q-learning Preference per Pathway: Weighting Higher Effect vs Lower Cost")
-    plt.ylabel("Best q_threshold (Q-learning)")
-    plt.xlabel("Pathway")
-    plt.legend(title="Preference")
-    plt.tight_layout()
-    plt.show()
+    fig.show()
     
 def vis_net(transition_matrix):
     # Visualize a single pathway as a set of action transitions using a directed graph
