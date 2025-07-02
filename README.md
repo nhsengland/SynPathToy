@@ -22,7 +22,7 @@ This repository holds a single notebook which contains a toy simulation of patie
 - Pathway Class (incl. valid transitions and thresholds)
     - The next_action method chooses from the valid transitions using the demographic, clinical value and random thresholds
 - Simulation Setup (default set to 10 patients, 10 pathways, 10 actions, 30 time steps)
-- Q-Learning Setup (based on the age_threshold condition)
+- Q-Learning Setup (based on the action cost, clinical penalty and length of time queuing)
 - Simulation Run 
 - Visualisations of outcomes
 
