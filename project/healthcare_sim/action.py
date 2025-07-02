@@ -30,7 +30,7 @@ class Action:
         - This ensures that sicker patients and those who have waited longer are prioritized in the queue.
         """
         import heapq
-        
+                
         # Combine priority level and outcomes score for sorting
         priority_score = patient.outcomes['clinical_penalty'] + 0.005*patient.outcomes['queue_penalty']
         heapq.heappush(self.queue, (priority_score, patient.pid, patient))
@@ -51,8 +51,9 @@ class Action:
             "next_action": self.name
             
         })
+
     
-    def execute(self):
+    def execute(self, IDEAL_CLINICAL_VALUES):
         """
         Processes patients assigned to this action for the current simulation step.
 
@@ -81,8 +82,8 @@ class Action:
             if self.queue:
                 _, _, patient = heapq.heappop(self.queue)
                 patient.queue_time += 1  # Still count as queue time until assigned?
-                patient.apply_action(self.effect)
-                patient.score_outcomes()
+                patient.apply_action(self.effect, IDEAL_CLINICAL_VALUES)
+                patient.score_outcomes(IDEAL_CLINICAL_VALUES)
                 self.in_progress.append((patient, self.duration))
         self.schedule.append(len(self.in_progress))
 
@@ -106,3 +107,9 @@ class Action:
         if pathway.name in patient.diseases:
             patient.diseases[pathway.name] = False
             next_action = None
+            
+    def reset(self):
+        self.queue = []
+        self.in_progress = []
+        self.schedule = []
+    

@@ -1,6 +1,7 @@
 import numpy as np
 from collections import defaultdict
 from healthcare_sim.config import NUM_STEPS, ALPHA, GAMMA
+import copy
 
 """
 This step simulates the flow of patients through the healthcare system. The simulation tracks the clinical variables of each patient, 
@@ -17,47 +18,60 @@ determines their next actions based on predefined pathways, and executes those a
 5. The total cost for the current time step (`step_cost`) is appended to the `system_cost` list.
 
 """
-def run_simulation(patients, pathways, actions, OUTPUT_ACTIONS,
-        NUM_STEPS, ALPHA, GAMMA, EPSILON):
-    from healthcare_sim.qlearn import choose_q_action, compute_reward
+def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_ACTIONS, PROBABILITY_OF_DISEASE,
+        NUM_PATHWAYS, NUM_STEPS, ALPHA, GAMMA, EPSILON, IDEAL_CLINICAL_VALUES):
     from healthcare_sim.action import Action
     
+    actions_major = {}
+    pathways_major = {}
+    system_cost_major = {}
+    activity_log_major = {}  
+    q_threshold_rewards_major = {}
+    
     print("Running simulation...")
-    q_table = defaultdict(lambda: defaultdict(float))
-    system_cost = []
-    q_threshold_rewards = []
-    activity_log = []
-    q_state_action_pairs = []
-    for step in range(NUM_STEPS):
-        step_cost = 0
-        for patient in patients:
-            patient.clinical_decay(patient)  # Simulate natural decay of clinical variables
-            for pw in pathways: 
-                
-                q_state = pw.name  # Use pathway name as the state
-                q_action = choose_q_action(q_state, EPSILON, q_table) # Q-learning: Adjust AGE_THRESHOLD dynamically    
-                q_state_action_pairs.append((q_state, q_action))
-                #q_action = 0  # Uncomment to turn q-learning off!
-                if patient.diseases[pw.name] == False:  # Only progress if disease is present
-                    patient.progress_diseases(patient, pw.name, actions) # Simulate disease occurrence
-                    continue
-
-                next_a = pw.next_action(patient, q_action, actions, step, activity_log) # Determine next action based on pathway and q_action
-                
-                if next_a == OUTPUT_ACTIONS: # Handle output action logic
-                    Action.handle_output_action(patient, pw, next_a)
-                    
+    for major_step in range(2):  # Major step loop, can be expanded for multiple iterations
+        system_cost = {}
+        sum_cost = 0
+        activity_log = []
+        q_table = defaultdict(lambda: defaultdict(float))
+        for p in patients:
+            p.diseases = {f'P{p}': False for p in range(NUM_PATHWAYS)}
+        for step in range(NUM_STEPS):
+            step_cost = 0
+            q_state_action_pairs = []
+            q_threshold_rewards = []
+            rewards = []
+            for p in patients:
+                for pw in pathways:
+                    if not p.diseases[pw.name]:
+                        Patient.progress_diseases(p, pw.name, actions, INPUT_ACTIONS, PROBABILITY_OF_DISEASE)
+                        continue
+                    Patient.clinical_decay(p, IDEAL_CLINICAL_VALUES) # Patient gets a little worse per pathway they are on
+                    next_a, q_state = pw.next_action(p,  actions, q_table, EPSILON, major_step, step, activity_log)
+                    q_state_action_pairs.append((q_state, next_a))
+                    if next_a == OUTPUT_ACTIONS:
+                        Action.handle_output_action(p, pw, next_a)
+                    queue_penalty = p.queue_time ** 2  # Quadratic penalty
+                    clinical_penalty = np.exp(p.outcomes['clinical_penalty'] / 50) # Exponential penalty
+                    action_cost = actions[next_a].cost if next_a in actions else 0
+                    reward = - 0.25 * action_cost - 0.5 * clinical_penalty - 0.0001 * queue_penalty
+                    rewards.append(reward)
+                    q_threshold_rewards.append((pw.name, next_a, reward))
+                    for (q_state, next_a), reward in zip(q_state_action_pairs, rewards):
+                        q_table[q_state][next_a] += ALPHA * (reward + GAMMA * max(q_table[q_state].values()) - q_table[q_state][next_a])
+            for act in actions.values():
+                in_progress, cost = act.execute(IDEAL_CLINICAL_VALUES)
+                step_cost += cost
+            sum_cost += step_cost
+            system_cost[step] = sum_cost
+            
+        actions_major[major_step] = copy.deepcopy(actions)
+        pathways_major[major_step] = copy.deepcopy(pathways)
+        system_cost_major[major_step] = copy.deepcopy(system_cost)
+        activity_log_major[major_step] = copy.deepcopy(activity_log)
+        q_threshold_rewards_major[major_step] = copy.deepcopy(q_threshold_rewards)
         for act in actions.values():
-            in_progress, cost = act.execute()
-            step_cost += cost
+            act.reset()  # Reset each Action object for the next major step
             
-        system_cost.append(step_cost)
-        reward = compute_reward(step_cost, patients)
-        q_threshold_rewards.append((q_action, reward))
-
-        # Q-table update for all state-action pairs in this step
-        for q_state, q_action in q_state_action_pairs:
-            q_table[q_state][q_action] += ALPHA * (reward + GAMMA * max(q_table[q_state].values()) - q_table[q_state][q_action])
-            
-    return system_cost, q_threshold_rewards, q_table, activity_log, q_state_action_pairs
+    return actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major
             
