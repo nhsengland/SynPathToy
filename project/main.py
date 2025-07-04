@@ -31,7 +31,7 @@ NUM_PATIENTS = config.NUM_PATIENTS
 NUM_PATHWAYS = config.NUM_PATHWAYS
 NUM_ACTIONS = config.NUM_ACTIONS
 NUM_STEPS = config.NUM_STEPS
-CAPACITY = config.CAPACITY
+BASE_CAPACITY = config.BASE_CAPACITY
 AGE_THRESHOLD = config.AGE_THRESHOLD
 PROBABILITY_OF_DISEASE = config.PROBABILITY_OF_DISEASE
 IDEAL_CLINICAL_VALUES = config.IDEAL_CLINICAL_VALUES
@@ -43,7 +43,7 @@ EPSILON = config.EPSILON
 
 def build_simulation(): 
     # Step 2: call patient, action and pathway classes to create instances
-    actions, pathways, threshold_matrix, transition_matrix = initialize_simulation(Action, Pathway, NUM_PATIENTS, NUM_PATHWAYS, NUM_ACTIONS, CAPACITY, IDEAL_CLINICAL_VALUES, PROBABILITY_OF_DISEASE, INPUT_ACTIONS, OUTPUT_ACTIONS)
+    actions, pathways, threshold_matrix, transition_matrix = initialize_simulation(Action, Pathway, NUM_PATIENTS, NUM_PATHWAYS, NUM_ACTIONS, BASE_CAPACITY, IDEAL_CLINICAL_VALUES, PROBABILITY_OF_DISEASE, INPUT_ACTIONS, OUTPUT_ACTIONS)
     patients = initialize_patients(Patient, NUM_PATHWAYS, IDEAL_CLINICAL_VALUES, NUM_PATIENTS)
     
     print(NUM_PATIENTS, "patients created.")
@@ -58,6 +58,7 @@ def build_simulation():
         
     for action_name, action_obj in list(actions.items())[:3]:
         print(f"Action Name: {action_name}")
+        print(f"  Base Capacity: {action_obj.base_capacity}")
         print(f"  Capacity: {action_obj.capacity}")
         print(f"  Effect: {action_obj.effect}")
         print(f"  Cost: {action_obj.cost}")

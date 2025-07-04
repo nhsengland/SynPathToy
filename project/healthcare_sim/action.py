@@ -12,15 +12,26 @@ class Action:
         schedule (list): A record of the number of patients served at each time step.
     """
     
-    def __init__(self, name, capacity, effect, cost, duration):
+    def __init__(self, name, base_capacity, effect, cost, duration):
         self.name = name
-        self.capacity = capacity
+        self.base_capacity = base_capacity
+        self.capacity = base_capacity
         self.effect = effect
         self.cost = cost
         self.duration = duration
         self.queue = []  # Use a priority queue
         self.in_progress = []  # List of (patient, remaining_time)
         self.schedule = []
+        
+    def update_capacity(self, day):
+        # Example: capacity reduced by 30% on weekends
+        import numpy as np
+        
+        if day % 7 in [5, 6]:
+            self.capacity = int(self.base_capacity * 0.7)
+        else:
+            fluctuation = np.random.uniform(0.8, 1.2)
+            self.capacity = int(self.base_capacity * fluctuation)
 
     def assign(self, patient):
         """

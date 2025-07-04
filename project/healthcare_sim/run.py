@@ -41,6 +41,8 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
             q_state_action_pairs = []
             q_threshold_rewards = []
             rewards = []
+            for act in actions.values():
+                act.update_capacity(step)
             for p in patients:
                 for pw in pathways:
                     if not p.diseases[pw.name]:
