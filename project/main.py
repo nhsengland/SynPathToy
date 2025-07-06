@@ -21,7 +21,9 @@ from healthcare_sim import (
     vis_learning,
     vis_change,
     vis_sankey,
-    vis_net
+    vis_net,
+    vis_qstate,
+    vis_qstate2
 )
 
 #np.random.seed(0)
@@ -47,13 +49,17 @@ def build_simulation():
     patients = initialize_patients(Patient, NUM_PATHWAYS, IDEAL_CLINICAL_VALUES, NUM_PATIENTS)
     
     print(NUM_PATIENTS, "patients created.")
-    for i, p in enumerate(patients[:3]):
+    for i, patient in enumerate(patients[:3]):
         print(f"Patient {i+1}:")
-        print(f"  ID: {p.pid}")
-        print(f"  Age: {p.age}")
-        print(f"  Sex: {p.sex}")
-        print(f"  Diseases: {p.diseases}")
-        print(f"  Clinical Variables: {p.clinical}")
+        print(f"  ID: {patient.pid}")
+        print(f"  Age: {patient.age}")
+        print(f"  Age Group: {patient.age_group}")
+        print(f"  Sex: {patient.sex}")
+        print(f"  Diseases: {patient.diseases}")
+        print(f"  Comorbidities: {patient.comorbidities}")
+        print(f"  Clinical Variables: {patient.clinical}")
+        print(f"  Clinical Outcome: {patient.outcomes['clinical_penalty']}")
+        print(f"  Sickness: {patient.sickness}")
         print()
         
     for action_name, action_obj in list(actions.items())[:3]:
@@ -69,7 +75,7 @@ def build_simulation():
     
     # Step 4: run the simulation
     print("Starting simulation...")
-    actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major = run_simulation(
+    actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major = run_simulation(
         Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_ACTIONS, PROBABILITY_OF_DISEASE,
         NUM_PATHWAYS, NUM_STEPS, ALPHA, GAMMA, EPSILON, IDEAL_CLINICAL_VALUES
     )
@@ -85,6 +91,8 @@ def build_simulation():
     vis_learning(system_cost_major, first_major_step, last_major_step)
     vis_change(transition_matrix, actions_major, first_major_step, last_major_step)
     vis_sankey(activity_log_major[last_major_step])
+    vis_qstate(q_table_major[last_major_step])
+    vis_qstate2(q_table_major[last_major_step], q_table_major, first_major_step)
 
     print("Total system cost:", sum(system_cost_major[last_major_step].values()))
     print("Average queue penalty:", np.mean([p.outcomes['queue_penalty'] for p in patients]))

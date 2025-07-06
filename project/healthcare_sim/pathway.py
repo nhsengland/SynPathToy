@@ -15,7 +15,7 @@ class Pathway:
         self.thresholds = thresholds
         
     
-    def next_action(self, patient, actions, q_table, epsilon, major_step, step, activity_log):
+    def next_action(self, patient, actions, q_table, epsilon, major_step, step, activity_log, system_state):
         """
         Determines and assigns the next action for a patient within this pathway using an epsilon-greedy Q-learning policy.
 
@@ -51,7 +51,7 @@ class Pathway:
         if not valid_actions:
             return None
 
-        q_state = (self.name, current_action, major_step)
+        q_state = (self.name, current_action, patient.sickness, patient.age_group, major_step, system_state)
       
         if major_step == 0:
             next_a = random.choice(valid_actions)

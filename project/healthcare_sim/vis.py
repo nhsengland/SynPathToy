@@ -301,3 +301,70 @@ def vis_net(transition_matrix):
 
     plt.title(f"Pathway {selected_pathway} as Action Transitions")
     plt.show()
+    
+def vis_qstate(q_table):
+    #Visualize the available states in q_table
+
+    # Get all unique states (keys) from q_table
+    q_states = list(q_table.keys())
+    print(f"Number of unique states in q_table: {len(q_states)}")
+
+    # Convert states to a DataFrame for visualization
+    q_states_df = pd.DataFrame(q_states, columns=['pathway', 'current_action', 'sickness', 'age_group', 'major_step', 'system_state'])
+    #q_states_df = pd.DataFrame(q_states, columns=['pathway', 'current_action','major_step'])
+
+    # Show a sample of the states
+    display(q_states_df.head(10))
+
+    # Plot the distribution of states by pathway and action
+    plt.figure(figsize=(12, 6))
+    sns.countplot(data=q_states_df, x='pathway', hue='current_action', palette='tab10')
+    plt.title("Distribution of Q-table States by Pathway and Current Action")
+    plt.xlabel("Pathway")
+    plt.ylabel("Count")
+    plt.legend(title="Current Action", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+    
+def vis_qstate2(q_table, q_table_major, first_major_step):
+    # Visualize Q-values for each state at the start and end of the simulation
+
+# Get q_table for first and last major step
+    from collections import defaultdict
+
+    def q_table_to_df(q_table):
+        # Flatten q_table: each row is (state..., action, value)
+        rows = []
+        for state, actions_dict in q_table.items():
+            for action, value in actions_dict.items():
+                rows.append((*state, action, value))
+        return pd.DataFrame(rows, columns=['pathway', 'current_action', 'sickness', 'age_group', 'major_step', 'system_state', 'action', 'q_value'])
+        #return pd.DataFrame(rows, columns=['pathway', 'current_action', 'major_step', 'action', 'q_value'])
+
+    # Convert to DataFrame for plotting
+    df_q_last = q_table_to_df(q_table)
+    df_q_first = q_table_to_df(q_table_major[first_major_step])
+
+    # Show a sample of Q-values at the start and end
+    print("Q-table (first major step):")
+    display(df_q_first.head(10))
+    print("Q-table (last major step):")
+    display(df_q_last.head(10))
+
+    # Plot Q-value distributions for the last major step
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6), sharey=True)
+
+    # Q-value distribution for the first major step
+    sns.histplot(df_q_first[df_q_first['q_value']!=0]['q_value'], bins=50, kde=True, color='orange', ax=axes[0])
+    axes[0].set_title("Distribution of Q-values (First Major Step)")
+    axes[0].set_xlabel("Q-value")
+    axes[0].set_ylabel("Frequency")
+
+    # Q-value distribution for the last major step
+    sns.histplot(df_q_last[df_q_last['q_value']!=0]['q_value'], bins=50, kde=True, color='orange', ax=axes[1])
+    axes[1].set_title("Distribution of Q-values (Last Major Step)")
+    axes[1].set_xlabel("Q-value")
+    axes[1].set_ylabel("Frequency")
+
+    plt.tight_layout()
+    plt.show()
