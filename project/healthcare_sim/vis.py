@@ -282,8 +282,7 @@ def vis_sankey(activity_log, ):
         ))])
 
     fig.update_layout(title_text="Patient Action Flow (Sankey Diagram)", font_size=10)
-    plt.savefig("outputs/sankey.png", dpi=300, bbox_inches='tight') 
-    plt.close() 
+    fig.write_image("outputs/sankey.png", scale=2) 
     
 def vis_net(transition_matrix):
     # Visualize a single pathway as a set of action transitions using a directed graph
