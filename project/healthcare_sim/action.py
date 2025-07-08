@@ -100,24 +100,6 @@ class Action:
 
         # Return finished patients and cost
         return finished_patients, len(finished_patients) * self.cost
-    
-    def handle_output_action(patient, pathway, next_action):
-        """
-        Handles the logic when a patient reaches an output action in a pathway.
-
-        This method sets the disease status for the specified pathway to False, indicating
-        that the patient has completed the pathway or exited the system. It also allows for
-        any additional cleanup or transition logic when a patient reaches an output action.
-
-        Args:
-            patient (Patient): The patient object being processed.
-            pathway_code (str): The code of the pathway being updated.
-            next_action (str): The name of the output action (typically the final action in the pathway).
-        """
-        # Set disease to False for this pathway
-        if pathway.name in patient.diseases:
-            patient.diseases[pathway.name] = False
-            next_action = None
             
     def reset(self):
         self.queue = []

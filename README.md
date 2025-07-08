@@ -17,14 +17,25 @@
 ### About the Project
 
 This repository holds a single notebook which contains a toy simulation of patient pathways to be optimised for both patient outcomes and system cost.  The simulation includes:
-- Patient Class (incl. age, sex, diseases, clinical values, priority)
-- Action Class (incl. capacity, effects of the action on the patient clincial values, cost, duration, queue)
-- Pathway Class (incl. valid transitions and thresholds)
-    - The next_action method chooses from the valid transitions using the demographic, clinical value and random thresholds
-- Simulation Setup (default set to 10 patients, 10 pathways, 10 actions, 30 time steps)
-- Q-Learning Setup (based on the action cost, clinical penalty and length of time queuing)
-- Simulation Run 
-- Visualisations of outcomes
+- 'config.py' Config (default set to 10 patients, 10 pathways, 10 actions, 30 time steps) 
+    - At 10 patients this takes less than 1 second to run.   At 1,000 patients this takes 1hr30.
+- 'patient.py' Patient Class (incl. age, sex, diseases, comorbidities, clinical values, sickness, outcomes)
+    - The progress_disease method simulates disease occurence over time
+    - The clinical_decay method simulates the patient getting sicker over time
+    - The apply_action methods simulates the patient getting better due to an activity
+    - The score_outcomes method calculates the queue and clinical penalities for an individual
+- 'action.py' Action Class (incl. capacity, effects of the action on the patient clincial values, cost, duration, queue)
+    - The update_capacity allows some dynamic changes in supply
+    - The assign method deals with how the individuals are placed in a queue for the activity using heapq
+    - The execute method 
+- 'pathway.py' Pathway Class (incl. valid transitions and thresholds)
+    - The next_action method chooses from the valid transitions using q-learning to decide for each pathway which action to take dependent on the patient age-group and sickness and optimise over cost, benefit to the patient, patient queue time, and system overall queue length. 
+- 'build.py' Simulation Build (Creates a set of random actions randomly connected with transistion and threshold matrices to define possible links)
+- 'run.py' Simulation Run 
+    - Runs for two major time steps to compare raw versus learnt systems
+    - Runs for a user set number of steps
+    - For each patient look at each pathway if the patient is on this pathway choose a next action for them to be added to the queue for.  Calculate the outcomes and log the activity.
+- 'vis.py' Visualisations of outcomes
 
 _**Note:** Only public or fake data are shared in this repository._
 
@@ -39,12 +50,11 @@ _**Note:** Only public or fake data are shared in this repository._
 
 As this is a toy simulation, fake data is generated within the code using random numbers.   It does not reflect any real world data or insights. 
 
-
 ### Usage
 This code has been created to demonstrate some of the features required when optimising patient pathways.   It is to be used as a demonstration only. 
 
 #### Outputs
-Visualisations of the system to be generated as well as figures showing usage, queues and outcomes.   The random seeds can be uncommented in the first cell to create reproducible results. 
+Visualisations of the system to be generated as well as figures showing usage, queues and outcomes - saved on outputs/.   The random seeds can be uncommented in the first cell to create reproducible results. 
 
 ### Contributing
 

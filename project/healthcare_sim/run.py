@@ -56,7 +56,8 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
                     next_a, q_state = pw.next_action(p,  actions, q_table, EPSILON, major_step, step, activity_log, system_state)
                     q_state_action_pairs.append((q_state, next_a))
                     if next_a == OUTPUT_ACTIONS:
-                        Action.handle_output_action(p, pw, next_a)
+                        if pw.name in p.diseases:
+                            p.diseases[pw.name] = False # Remove disease flag as pathway finished
                     queue_penalty = p.queue_time ** 2  # Quadratic penalty
                     clinical_penalty = np.exp(p.outcomes['clinical_penalty'] / 50) # Exponential penalty
                     action_cost = actions[next_a].cost if next_a in actions else 0
