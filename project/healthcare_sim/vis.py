@@ -28,7 +28,8 @@ def vis_action_q(actions_major, first_major_step, last_major_step):
     axes[1].set_xticklabels(list(actions_last.keys()), rotation=45)
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig("outputs/action_q.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
         
 def vis_heatmaps(actions_major, first_major_step, last_major_step):
     heatmap_data_first = np.array([act.schedule for act in actions_major[first_major_step].values()])
@@ -63,7 +64,8 @@ def vis_heatmaps(actions_major, first_major_step, last_major_step):
     axes[1].set_ylabel("")
 
     plt.tight_layout()
-    plt.show()   
+    plt.savefig("outputs/heatmap.png", dpi=300, bbox_inches='tight') 
+    plt.close()   
     
 def vis_penalty(patients):
     # Subplot 1: Queue Penalty
@@ -81,7 +83,8 @@ def vis_penalty(patients):
     plt.ylabel("Frequency")
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig("outputs/penalty.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
     
 def vis_activity(actions_major, first_major_step, last_major_step):
 
@@ -108,7 +111,8 @@ def vis_activity(actions_major, first_major_step, last_major_step):
     plt.legend()
 
     plt.grid(True)
-    plt.show()
+    plt.savefig("outputs/activity.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
     
 def vis_learning(system_cost_major, first_major_step, last_major_step):
     plt.figure(figsize=(10, 6))
@@ -132,7 +136,8 @@ def vis_learning(system_cost_major, first_major_step, last_major_step):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()   
+    plt.savefig("outputs/learning.png", dpi=300, bbox_inches='tight') 
+    plt.close()    
     
 def vis_change(transition_matrix, actions_major, first_major_step, last_major_step):
     # Show action usage vs cost for the selected pathway for both first and last major_step on the same figure,
@@ -184,7 +189,8 @@ def vis_change(transition_matrix, actions_major, first_major_step, last_major_st
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig("outputs/change.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
     
 def vis_sankey(activity_log, ):
     # Display activity_log as a DataFrame (tabular form)
@@ -221,7 +227,8 @@ def vis_sankey(activity_log, ):
     plt.xlabel("Simulation Time")
     plt.ylabel("Pathway")
     plt.yticks(ticks=np.arange(len(all_pathways)) + 0.5, labels=all_pathways, rotation=0)
-    plt.show()
+    plt.savefig("outputs/path.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
 
     # Prepare data for Sankey diagram
     filtered_df = example_patient_pathway_df.dropna(subset=['action_name','next_action'])
@@ -275,8 +282,7 @@ def vis_sankey(activity_log, ):
         ))])
 
     fig.update_layout(title_text="Patient Action Flow (Sankey Diagram)", font_size=10)
-    fig.show(renderer="browser")
-    fig.show()
+    fig.write_image("outputs/sankey.png", scale=2) 
     
 def vis_net(transition_matrix):
     # Visualize a single pathway as a set of action transitions using a directed graph
@@ -300,4 +306,75 @@ def vis_net(transition_matrix):
     nx.draw_networkx_edge_labels(G_transitions_single, pos, edge_labels=edge_labels, font_size=8)
 
     plt.title(f"Pathway {selected_pathway} as Action Transitions")
-    plt.show()
+    plt.savefig("outputs/net.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
+    
+def vis_qstate(q_table):
+    #Visualize the available states in q_table
+
+    # Get all unique states (keys) from q_table
+    q_states = list(q_table.keys())
+    print(f"Number of unique states in q_table: {len(q_states)}")
+
+    # Convert states to a DataFrame for visualization
+    q_states_df = pd.DataFrame(q_states, columns=['pathway', 'current_action', 'sickness', 'age_group', 'major_step', 'system_state'])
+    #q_states_df = pd.DataFrame(q_states, columns=['pathway', 'current_action','major_step'])
+
+    # Show a sample of the states
+    display(q_states_df.head(10))
+
+    # Plot the distribution of states by pathway and action
+    plt.figure(figsize=(12, 6))
+    sns.countplot(data=q_states_df, x='pathway', hue='current_action', palette='tab10')
+    plt.title("Distribution of Q-table States by Pathway and Current Action")
+    plt.xlabel("Pathway")
+    plt.ylabel("Count")
+    plt.legend(title="Current Action", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.savefig("outputs/qstate.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
+    
+def vis_qstate2(q_table, q_table_major, first_major_step):
+    # Visualize Q-values for each state at the start and end of the simulation
+
+# Get q_table for first and last major step
+    from collections import defaultdict
+
+    def q_table_to_df(q_table):
+        # Flatten q_table: each row is (state..., action, value)
+        rows = []
+        for state, actions_dict in q_table.items():
+            for action, value in actions_dict.items():
+                rows.append((*state, action, value))
+        return pd.DataFrame(rows, columns=['pathway', 'current_action', 'sickness', 'age_group', 'major_step', 'system_state', 'action', 'q_value'])
+        #return pd.DataFrame(rows, columns=['pathway', 'current_action', 'major_step', 'action', 'q_value'])
+
+    # Convert to DataFrame for plotting
+    df_q_last = q_table_to_df(q_table)
+    df_q_first = q_table_to_df(q_table_major[first_major_step])
+
+    # Show a sample of Q-values at the start and end
+    print("Q-table (first major step):")
+    display(df_q_first.head(10))
+    print("Q-table (last major step):")
+    display(df_q_last.head(10))
+
+    # Plot Q-value distributions for the last major step
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6), sharey=True)
+
+    # Q-value distribution for the first major step
+    sns.histplot(df_q_first[df_q_first['q_value']!=0]['q_value'], bins=50, kde=True, color='orange', ax=axes[0])
+    axes[0].set_title("Distribution of Q-values (First Major Step)")
+    axes[0].set_xlabel("Q-value")
+    axes[0].set_ylabel("Frequency")
+
+    # Q-value distribution for the last major step
+    sns.histplot(df_q_last[df_q_last['q_value']!=0]['q_value'], bins=50, kde=True, color='orange', ax=axes[1])
+    axes[1].set_title("Distribution of Q-values (Last Major Step)")
+    axes[1].set_xlabel("Q-value")
+    axes[1].set_ylabel("Frequency")
+
+    plt.tight_layout()
+    plt.savefig("outputs/qstate2.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
+    

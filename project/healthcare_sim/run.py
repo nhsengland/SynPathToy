@@ -21,14 +21,16 @@ determines their next actions based on predefined pathways, and executes those a
 def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_ACTIONS, PROBABILITY_OF_DISEASE,
         NUM_PATHWAYS, NUM_STEPS, ALPHA, GAMMA, EPSILON, IDEAL_CLINICAL_VALUES):
     from healthcare_sim.action import Action
+    import time
     
     actions_major = {}
     pathways_major = {}
     system_cost_major = {}
     activity_log_major = {}  
     q_threshold_rewards_major = {}
-    
+    q_table_major = {}
     print("Running simulation...")
+    start_time = time.time()
     for major_step in range(2):  # Major step loop, can be expanded for multiple iterations
         system_cost = {}
         sum_cost = 0
@@ -41,20 +43,25 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
             q_state_action_pairs = []
             q_threshold_rewards = []
             rewards = []
+            for act in actions.values():
+                act.update_capacity(step)
             for p in patients:
                 for pw in pathways:
                     if not p.diseases[pw.name]:
                         Patient.progress_diseases(p, pw.name, actions, INPUT_ACTIONS, PROBABILITY_OF_DISEASE)
                         continue
                     Patient.clinical_decay(p, IDEAL_CLINICAL_VALUES) # Patient gets a little worse per pathway they are on
-                    next_a, q_state = pw.next_action(p,  actions, q_table, EPSILON, major_step, step, activity_log)
+                    for act in actions.values():
+                        system_state = sum(len(queue) for queue in act.queue) # Calculate the total queue
+                    next_a, q_state = pw.next_action(p,  actions, q_table, EPSILON, major_step, step, activity_log, system_state)
                     q_state_action_pairs.append((q_state, next_a))
                     if next_a == OUTPUT_ACTIONS:
-                        Action.handle_output_action(p, pw, next_a)
+                        if pw.name in p.diseases:
+                            p.diseases[pw.name] = False # Remove disease flag as pathway finished
                     queue_penalty = p.queue_time ** 2  # Quadratic penalty
                     clinical_penalty = np.exp(p.outcomes['clinical_penalty'] / 50) # Exponential penalty
                     action_cost = actions[next_a].cost if next_a in actions else 0
-                    reward = - 0.25 * action_cost - 0.5 * clinical_penalty - 0.0001 * queue_penalty
+                    reward = - 0.25 * action_cost - 0.5 * clinical_penalty - 0.0001 * queue_penalty - 0.5 * system_state
                     rewards.append(reward)
                     q_threshold_rewards.append((pw.name, next_a, reward))
                     for (q_state, next_a), reward in zip(q_state_action_pairs, rewards):
@@ -70,8 +77,10 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
         system_cost_major[major_step] = copy.deepcopy(system_cost)
         activity_log_major[major_step] = copy.deepcopy(activity_log)
         q_threshold_rewards_major[major_step] = copy.deepcopy(q_threshold_rewards)
+        q_table_major[major_step] = copy.deepcopy(q_table)
         for act in actions.values():
             act.reset()  # Reset each Action object for the next major step
-            
-    return actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major
+    end_time = time.time()
+    print(f"Run completed in {end_time - start_time:.2f} seconds")        
+    return actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major
             

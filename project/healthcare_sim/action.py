@@ -12,15 +12,26 @@ class Action:
         schedule (list): A record of the number of patients served at each time step.
     """
     
-    def __init__(self, name, capacity, effect, cost, duration):
+    def __init__(self, name, base_capacity, effect, cost, duration):
         self.name = name
-        self.capacity = capacity
+        self.base_capacity = base_capacity
+        self.capacity = base_capacity
         self.effect = effect
         self.cost = cost
         self.duration = duration
         self.queue = []  # Use a priority queue
         self.in_progress = []  # List of (patient, remaining_time)
         self.schedule = []
+        
+    def update_capacity(self, day):
+        # Example: capacity reduced by 30% on weekends
+        import numpy as np
+        
+        if day % 7 in [5, 6]:
+            self.capacity = int(self.base_capacity * 0.7)
+        else:
+            fluctuation = np.random.uniform(0.8, 1.2)
+            self.capacity = int(self.base_capacity * fluctuation)
 
     def assign(self, patient):
         """
@@ -89,24 +100,6 @@ class Action:
 
         # Return finished patients and cost
         return finished_patients, len(finished_patients) * self.cost
-    
-    def handle_output_action(patient, pathway, next_action):
-        """
-        Handles the logic when a patient reaches an output action in a pathway.
-
-        This method sets the disease status for the specified pathway to False, indicating
-        that the patient has completed the pathway or exited the system. It also allows for
-        any additional cleanup or transition logic when a patient reaches an output action.
-
-        Args:
-            patient (Patient): The patient object being processed.
-            pathway_code (str): The code of the pathway being updated.
-            next_action (str): The name of the output action (typically the final action in the pathway).
-        """
-        # Set disease to False for this pathway
-        if pathway.name in patient.diseases:
-            patient.diseases[pathway.name] = False
-            next_action = None
             
     def reset(self):
         self.queue = []

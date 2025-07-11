@@ -38,16 +38,16 @@ def generate_transition_matrix(NUM_PATHWAYS, NUM_ACTIONS, input_actions=None, ou
         transition_matrix[pathway] = transitions                
     return transition_matrix
 
-def initialize_simulation(Action, Pathway, NUM_PATIENTS=100, NUM_PATHWAYS=10, NUM_ACTIONS=10, CAPACITY=5, IDEAL_CLINICAL_VALUES=None, PROBABILITY_OF_DISEASE=0.1, input_actions='a0', output_actions='a9'): 
+def initialize_simulation(Action, Pathway, NUM_PATIENTS=100, NUM_PATHWAYS=10, NUM_ACTIONS=10, BASE_CAPACITY=5, IDEAL_CLINICAL_VALUES=None, PROBABILITY_OF_DISEASE=0.1, input_actions='a0', output_actions='a9'): 
     actions = {
         f'a{i}': Action(
             f'a{i}', 
-            capacity=CAPACITY, 
+            base_capacity=BASE_CAPACITY,
             effect = {k: (np.random.normal(2,0.05) if j == i % 5 else 0) for j, k in enumerate(IDEAL_CLINICAL_VALUES.keys())},
             cost=np.random.randint(20, 100), 
             duration=np.random.randint(1, 3)        #removes_disease=random.rand() < 0.1
         )
-        for i in range(10)
+        for i in range(NUM_ACTIONS)
     }
 
     intermediate_actions = [a for a in actions if a not in input_actions + [output_actions]]
@@ -68,6 +68,6 @@ def initialize_simulation(Action, Pathway, NUM_PATIENTS=100, NUM_PATHWAYS=10, NU
         NUM_PATHWAYS, NUM_ACTIONS, input_actions, output_actions
     )
 
-    pathways = [Pathway(f'P{i}', transition_matrix, threshold_matrix) for i in range(10)]
+    pathways = [Pathway(f'P{i}', transition_matrix, threshold_matrix) for i in range(NUM_PATHWAYS)]
     
     return actions, pathways, threshold_matrix, transition_matrix

@@ -18,9 +18,17 @@ class Patient:
         
         self.pid = pid
         self.age = np.random.randint(18, 90)
+        if 18 <= self.age < 45:
+            self.age_group = 'young'
+        elif 45 <= self.age <= 65:
+            self.age_group = 'middle'
+        else:
+            self.age_group = 'elderly'
         self.sex = np.random.choice(['M', 'F'])
         self.diseases = {f'P{p}': False for p in range(NUM_PATHWAYS)}
+        self.comorbidities = 0
         self.clinical = {k: np.random.normal(v, 0.4*v) for k, v in IDEAL_CLINICAL_VALUES.items()}
+        self.sickness = 0
         self.outcomes = {'queue_penalty': 1000000, 'clinical_penalty': 100}
         self.history = []
         self.queue_time = 0
@@ -47,7 +55,9 @@ class Patient:
             patient.diseases[pathway] = True
             start_action = random.choice(input_actions)
             actions[start_action].assign(patient)
-            patient.history.append((start_action,pathway))        
+            patient.history.append((start_action,pathway))  
+        patient.comorbidities = sum(patient.diseases.values())
+      
             
     # --- Patient clinical variable updates ---
     @staticmethod
@@ -100,4 +110,10 @@ class Patient:
         self.outcomes['queue_penalty'] = max(0, self.outcomes['queue_penalty'] - self.queue_time)
         self.outcomes['clinical_penalty'] = sum(
         abs(self.clinical[k] - IDEAL_CLINICAL_VALUES[k]) for k in self.clinical if k in IDEAL_CLINICAL_VALUES)
+        if 0 <= self.outcomes['clinical_penalty'] < 110:
+            self.sickness = 0
+        elif 110 <= self.outcomes['clinical_penalty'] <= 160:
+            self.sickness = 1
+        else:
+            self.sickness = 2
     
