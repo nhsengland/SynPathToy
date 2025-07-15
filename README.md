@@ -16,10 +16,34 @@
 
 ### About the Project
 
-This repository holds python code for a toy simulation of patient pathways to be optimised for both patient outcomes and system cost.  The simulation includes:
+This repository holds python code for a toy simulation of patient pathways to be optimised for both patient outcomes and system cost.  
+
+ <img width="875" height="463" alt="image" src="https://github.com/user-attachments/assets/cb2c6f86-9bdb-4f52-890f-132a699c5c45" />
+
+*Figure 1: Schematic of the simulation showing a patient with attributes interacting with multiple randomly assigned pathways which each have randomly assigned overlapping actions*
+
+The next action decision is the key of the simulation.   This decision is based on the available possible actions for a patient and then picking an optimised next step based on the individual and system attributes.   These all need to balanced for all patients for both the average and outliers (i.e. we want an efficient system but also one that ensures no one has a significantly worse expereience).
+
+_**Note:** Only public or fake data are shared in this repository._
+
+### Built With
+
+[![Python v3.9](https://img.shields.io/badge/python-v3.9-blue.svg)](https://www.python.org/downloads/release/python-3916/)
+- Core Python packages (e.g. numpy, pandas)
+- Core python visulisation packages (e.g. matplotlib, networkx, seaborn)
+- [heapq](https://docs.python.org/3/library/heapq.html) for the priority queue implementation
+
+#### Data
+As this is a toy simulation, fake data is generated within the code using random numbers.   It does not reflect any real world data or insights. 
+
+### Usage
+This code has been created to demonstrate some of the features required when optimising patient pathways.   It is to be used as a demonstration only. 
+
+The code structure contained in '**project**' includes:
+- 'main.py'
 - 'config.py' Config (default set to 10 patients, 10 pathways, 10 actions, 30 time steps) 
     - At 10 patients this takes less than 1 second to run.   At 1,000 patients this takes 1hr30.
-- 'patient.py' Patient Class (incl. age, sex, diseases, comorbidities, clinical values, sickness, outcomes)
+    - 'patient.py' Patient Class (incl. age, sex, diseases, comorbidities, clinical values, sickness, outcomes)
     - The progress_disease method simulates disease occurence over time
     - The clinical_decay method simulates the patient getting sicker over time
     - The apply_action methods simulates the patient getting better due to an activity
@@ -37,20 +61,7 @@ This repository holds python code for a toy simulation of patient pathways to be
     - For each patient look at each pathway if the patient is on this pathway choose a next action for them to be added to the queue for.  Calculate the outcomes and log the activity.
 - 'vis.py' Visualisations of outcomes
 
-_**Note:** Only public or fake data are shared in this repository._
-
-### Built With
-
-[![Python v3.9](https://img.shields.io/badge/python-v3.9-blue.svg)](https://www.python.org/downloads/release/python-3916/)
-- Core Python packages (e.g. numpy, pandas)
-- Core python visulisation packages (e.g. matplotlib, networkx, seaborn)
-- [heapq](https://docs.python.org/3/library/heapq.html) for the priority queue implementation
-
-#### Data
-As this is a toy simulation, fake data is generated within the code using random numbers.   It does not reflect any real world data or insights. 
-
-### Usage
-This code has been created to demonstrate some of the features required when optimising patient pathways.   It is to be used as a demonstration only. 
+The '**Experiments**' Folder contains a full and minimium working example of the code as notebooks.
 
 #### Outputs
 Visualisations of the system to be generated as well as figures showing usage, queues and outcomes - saved on outputs/.   The random seeds can be uncommented in the first cell to create reproducible results. 
