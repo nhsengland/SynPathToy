@@ -18,11 +18,9 @@
 
 This repository holds python code for a toy simulation of patient pathways to be optimised for both patient outcomes and system cost.  
 
- <img width="875" height="463" alt="image" src="https://github.com/user-attachments/assets/cb2c6f86-9bdb-4f52-890f-132a699c5c45" />
+<img width="1002" height="730" alt="image" src="https://github.com/user-attachments/assets/4268d811-d450-49ad-bb02-7415c34e05bc" />
 
 *Figure 1: Schematic of the simulation showing a patient with attributes interacting with multiple randomly assigned pathways which each have randomly assigned overlapping actions*
-
-The next action decision is the key of the simulation.   This decision is based on the available possible actions for a patient and then picking an optimised next step based on the individual and system attributes.   These all need to balanced for all patients for both the average and outliers (i.e. we want an efficient system but also one that ensures no one has a significantly worse expereience).
 
 _**Note:** Only public or fake data are shared in this repository._
 
