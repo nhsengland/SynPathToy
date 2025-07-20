@@ -29,6 +29,9 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
     activity_log_major = {}  
     q_threshold_rewards_major = {}
     q_table_major = {}
+    q_value_history = []
+    clinical_penalty_history = []
+    queue_length_history = []
     print("Running simulation...")
     start_time = time.time()
     for major_step in range(2):  # Major step loop, can be expanded for multiple iterations
@@ -52,7 +55,8 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
                         continue
                     Patient.clinical_decay(p, IDEAL_CLINICAL_VALUES) # Patient gets a little worse per pathway they are on
                     for act in actions.values():
-                        system_state = sum(len(queue) for queue in act.queue) # Calculate the total queue
+                        system_state = int(sum(len(act.queue) for act in actions.values())) # Calculate the total queue
+                    EPSILON = EPSILON * 0.99**step  # Decay epsilon over time
                     next_a, q_state = pw.next_action(p,  actions, q_table, EPSILON, major_step, step, activity_log, system_state)
                     q_state_action_pairs.append((q_state, next_a))
                     if next_a == OUTPUT_ACTIONS:
@@ -66,6 +70,14 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
                     q_threshold_rewards.append((pw.name, next_a, reward))
                     for (q_state, next_a), reward in zip(q_state_action_pairs, rewards):
                         q_table[q_state][next_a] += ALPHA * (reward + GAMMA * max(q_table[q_state].values()) - q_table[q_state][next_a])
+                    
+                    avg_q_value = np.mean([max(q_table[s].values()) for s in q_table if q_table[s]])
+                    avg_clinical_penalty = np.mean([p.outcomes['clinical_penalty'] for p in patients])
+                    avg_queue_length = np.mean([len(act.queue) for act in actions.values()])
+
+                    q_value_history.append(avg_q_value)
+                    clinical_penalty_history.append(avg_clinical_penalty)
+                    queue_length_history.append(avg_queue_length)
             for act in actions.values():
                 in_progress, cost = act.execute(IDEAL_CLINICAL_VALUES)
                 step_cost += cost
@@ -82,5 +94,5 @@ def run_simulation(Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_A
             act.reset()  # Reset each Action object for the next major step
     end_time = time.time()
     print(f"Run completed in {end_time - start_time:.2f} seconds")        
-    return actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major
+    return actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major, q_value_history, clinical_penalty_history, queue_length_history
             

@@ -378,3 +378,30 @@ def vis_qstate2(q_table, q_table_major, first_major_step):
     plt.savefig("outputs/qstate2.png", dpi=300, bbox_inches='tight') 
     plt.close() 
     
+def vis_qstate3(q_value_history, clinical_penalty_history, queue_length_history):
+    plt.figure(figsize=(14, 4))
+
+    plt.subplot(1, 3, 1)
+    plt.plot(q_value_history, label='Avg Q-Value')
+    plt.xlabel("Episode")
+    plt.ylabel("Q-Value")
+    plt.title("Q-Learning Confidence Over Time")
+    plt.grid()
+
+    plt.subplot(1, 3, 2)
+    plt.plot(clinical_penalty_history, label='Clinical Penalty', color='orange')
+    plt.xlabel("Episode")
+    plt.ylabel("Avg Clinical Penalty")
+    plt.title("Patient Outcomes Over Time")
+    plt.grid()
+
+    plt.subplot(1, 3, 3)
+    plt.plot(queue_length_history, label='Queue Length', color='green')
+    plt.xlabel("Episode")
+    plt.ylabel("Avg Queue Length")
+    plt.title("System Congestion Over Time")
+    plt.grid()
+
+    plt.tight_layout()
+    plt.savefig("outputs/qstate3.png", dpi=300, bbox_inches='tight') 
+    plt.close() 
