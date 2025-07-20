@@ -23,7 +23,8 @@ from healthcare_sim import (
     vis_sankey,
     vis_net,
     vis_qstate,
-    vis_qstate2
+    vis_qstate2,
+    vis_qstate3
 )
 
 #np.random.seed(0)
@@ -75,7 +76,7 @@ def build_simulation():
     
     # Step 4: run the simulation
     print("Starting simulation...")
-    actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major = run_simulation(
+    actions_major, pathways_major, system_cost_major, q_threshold_rewards_major, activity_log_major, q_table_major, q_value_history, clinical_penalty_history, queue_length_history = run_simulation(
         Patient, patients, pathways, actions, OUTPUT_ACTIONS, INPUT_ACTIONS, PROBABILITY_OF_DISEASE,
         NUM_PATHWAYS, NUM_STEPS, ALPHA, GAMMA, EPSILON, IDEAL_CLINICAL_VALUES
     )
@@ -93,6 +94,7 @@ def build_simulation():
     vis_sankey(activity_log_major[last_major_step])
     vis_qstate(q_table_major[last_major_step])
     vis_qstate2(q_table_major[last_major_step], q_table_major, first_major_step)
+    vis_qstate3(q_value_history, clinical_penalty_history, queue_length_history)
 
     print("Total system cost:", sum(system_cost_major[last_major_step].values()))
     print("Average queue penalty:", np.mean([p.outcomes['queue_penalty'] for p in patients]))
